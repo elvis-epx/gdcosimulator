@@ -1,0 +1,4 @@
+#!/bin/sh
+
+time ./simulavc.py 1.0 0.0 0.0 0.25
+time ./simulavc.lisp
