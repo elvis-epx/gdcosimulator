@@ -1,6 +1,6 @@
 #!/usr/bin/env clisp
 
-(setf loo 100000)
+(defvar *looptimes* 100000)
 
 (defun square (x)
 	(* x x)
@@ -23,19 +23,21 @@
 ; def d2(SS, K, r, s, t):
 ;    return d1(SS, K, r, s, t) - s*math.sqrt(t)
 
-(setf kd1 0.0498673470)
-(setf kd3 0.0032776263)
-(setf kd5 0.0000488906)
-(setf kd2 0.0211410061)
-(setf kd4 0.0000380036)
-(setf kd6 0.0000053830)
+(defconstant kd1 0.0498673470)
+(defconstant kd3 0.0032776263)
+(defconstant kd5 0.0000488906)
+(defconstant kd2 0.0211410061)
+(defconstant kd4 0.0000380036)
+(defconstant kd6 0.0000053830)
 
 (defun N (x)
+	(let ((xp x) (p 0))
+
 	(if (< x 0)
 		(return-from N (- 1.0 (N (* x -1))))
 	)
 
-	(setf xp x)
+	; (setf xp x)
 	(setf p (+ 1.0 (* kd1 xp)))
 	(setf xp (* xp x))
 	(setf p (+ p (* kd2 xp)))
@@ -53,7 +55,7 @@
 	(setf p (* p p))
 
 	(- 1.0 (* 0.5 (/ 1.0 p)))
-)
+))
 
 ; def N(x):
 ;    if x < 0:
@@ -133,15 +135,15 @@ normal distribution around 0.0d0."
 ; copied from http://common-lisp.net/~loliveira/darcs/alexandria/numbers.lisp
 
 (defun randomgauss (avg dev)
-	(setf x (gaussian-random))
+	(let ((x (gaussian-random)))
 	(+ avg (* x dev))
-)
+))
 
 (defun gen_yield (u s s2 tt)
-	(setf sl (randomgauss s s2))
+	(let ((sl (randomgauss s s2)))
 	(setf sl (max 0.0 sl))
 	(randomgauss (* u tt) (* sl (sqrt tt)))
-)
+))
 
 ; def gen_yield(u, s, s2, t):
 ;    # gera volatilidade com media "s" e desvio-padrao "s2"
@@ -151,7 +153,7 @@ normal distribution around 0.0d0."
 ;    return random.gauss(u * t, sl * math.sqrt(t))
 
 (defun calc_round (premio r r2 s s2 tt)
-	(setf market (gen_yield r2 s s2 tt))
+	(let ((market (gen_yield r2 s s2 tt)) (SS NIL) (payoff_acoes NIL) (payoff NIL))
 	(setf SS (exp market))
 	(setf payoff_acoes (- SS 1.0))
 	(setf payoff (- (+ premio payoff_acoes) (Call SS K r s 0.0)))
@@ -159,7 +161,7 @@ normal distribution around 0.0d0."
 	; (format t "~6$ ~6$ ~6$ ~6$ ~6$: " premio SS payoff_acoes (Call SS K r s 0.0) payoff)
 
 	(vector (log (+ 1.0 payoff)) (log (+ 1.0 payoff_acoes)))
-)
+))
 
 ; def calc_round(premio, r2, s, s2, t):
 ;    SS = 1.0
@@ -175,16 +177,16 @@ normal distribution around 0.0d0."
 ;    return (math.log(1.0 + payoff), math.log(1.0 + payoff_acoes))
 
 
-(setf args (vector 1.0 0.0 0.0 0.25))
+(defvar args (vector 1.0 0.0 0.0 0.25))
 ; FIXME ler args da entrada padrao
 
-(setf K (aref args 0))
-(setf s2 (aref args 1))
-(setf r 0.09)
-(setf r2 (* r (aref args 2)))
-(setf s (aref args 3))
-(setf s2 (* s2 s))
-(setf tt (/ 30.0 365.0))
+(defvar K (aref args 0))
+(defvar s2 (aref args 1))
+(defvar r 0.09)
+(defvar r2 (* r (aref args 2)))
+(defvar s (aref args 3))
+(defvar s2 (* s2 s))
+(defvar tt (/ 30.0 365.0))
 
 ; K = args[0]
 ; s2 = args[1]
@@ -194,42 +196,42 @@ normal distribution around 0.0d0."
 ; s2 *= s
 ; t = 30.0 / 365.0
 
-(setf retornos (make-array loo :adjustable t :fill-pointer 0 :element-type 'float))
-(setf retornos_acoes (make-array loo :adjustable t :fill-pointer 0 :element-type 'float))
+(defvar retornos (make-array *looptimes* :adjustable t :fill-pointer 0 :element-type 'float))
+(defvar retornos_acoes (make-array *looptimes* :adjustable t :fill-pointer 0 :element-type 'float))
 
 ; retornos = []
 ; retornos_acoes = []
 
-(setf premio (Call 1.0 K r s tt))
+(defvar premio (Call 1.0 K r s tt))
 
 ; # vende coberto 1 opcao
 ; SS = 1.0
 ; premio = Call(SS, K, r, s, t)
 
-(dotimes (i loo)
-	(setf ret (calc_round premio r r2 s s2 tt))
+(dotimes (i *looptimes*)
+	(let ((ret (calc_round premio r r2 s s2 tt)))
 	
 	; (format t "~6$ ~6$~%" (aref ret 0) (aref ret 1))
 	(vector-push (aref ret 0) retornos)
 	(vector-push (aref ret 1) retornos_acoes)
-)
+))
 
 ; for i in range(0, 1000000):
 ;     payoff, payoff_acoes = calc_round(premio, r2, s, s2, t)
 ;     retornos.append(payoff)
 ;     retornos_acoes.append(payoff_acoes)
 
-(setf retorno_desvio 0.0)
-(setf retorno_acoes_desvio 0.0)
-(setf retorno_medio (/ (reduce #'+ retornos) loo))
-(setf retorno_acoes_medio (/ (reduce #'+ retornos_acoes) loo))
+(defvar retorno_desvio 0.0)
+(defvar retorno_acoes_desvio 0.0)
+(defvar retorno_medio (/ (reduce #'+ retornos) *looptimes*))
+(defvar retorno_acoes_medio (/ (reduce #'+ retornos_acoes) *looptimes*))
 
 ; retorno_desvio = 0.0
 ; retorno_acoes_desvio = 0.0
 ; retorno_medio = sum(retornos) / len(retornos)
 ; retorno_acoes_medio = sum(retornos_acoes) / len(retornos_acoes)
 
-(dotimes (i loo)
+(dotimes (i *looptimes*)
 	(let ( (retornos_i (aref retornos i))
 		(retornos_acoes_i (aref retornos_acoes i)))
 
@@ -244,8 +246,8 @@ normal distribution around 0.0d0."
 ;    retorno_desvio += (retornos[i] - retorno_medio) ** 2
 ;    retorno_acoes_desvio += (retornos_acoes[i] - retorno_acoes_medio) ** 2
 
-(setf retorno_desvio (sqrt (/ retorno_desvio loo)))
-(setf retorno_acoes_desvio (sqrt (/ retorno_acoes_desvio loo)))
+(setf retorno_desvio (sqrt (/ retorno_desvio *looptimes*)))
+(setf retorno_acoes_desvio (sqrt (/ retorno_acoes_desvio *looptimes*)))
 
 ;retorno_desvio = math.sqrt(retorno_desvio / len(retornos))
 ;retorno_acoes_desvio = math.sqrt(retorno_acoes_desvio / len(retornos_acoes))
@@ -261,10 +263,10 @@ normal distribution around 0.0d0."
 ; retorno_desvio /= math.sqrt(t)
 ; retorno_acoes_desvio /= math.sqrt(t)
 
-(setf retorno_comp
+(defvar retorno_comp
 	(-	retorno_medio
 		(/ (square retorno_desvio) 2)))
-(setf retorno_acoes_comp
+(defvar retorno_acoes_comp
 	(- 	retorno_acoes_medio 
 		(/ (square retorno_acoes_desvio) 2)))
 
