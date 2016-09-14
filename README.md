@@ -10,7 +10,7 @@ from a long-term stock position.
 
 The three executable scripts are:
 
-```simulavc.py```
+## simulavc.py
 
 Simulates a huge number of operations for a given
 scenario and prints the average return and volatility.
@@ -20,7 +20,7 @@ over many, many individual operations; they represent
 what a long-term investor would get upon doing the operation
 many times over an extended amount of time.
 
-```h_vc.py```
+## h_vc.py
 
 Simulation supervisor: creates a list of scenarios based
 on market variables, and calls simulavc.py for each 
@@ -33,7 +33,7 @@ simulations can be spawned in parallel (useful in
 multi-core computers: using two cores will cut the total
 simulation time by half).
 
-```g_vc.py```
+## g_vc.py
 
 Simulation data graphic visualizer: for analysis of simulation
 results. Some filtering options are available, so the effect
